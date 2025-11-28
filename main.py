@@ -14,11 +14,13 @@ tg_bot = Bot(token=TELEGRAM_TOKEN)
 
 # список фруктов игры
 FRUITS = [
-    "Bomb", "Spike", "Chop", "Spring", "Kilo", "Smoke", "Spin", "Flame",
-    "Ice", "Sand", "Dark", "Diamond", "Light", "Love", "Rubber", "Barrier",
-    "Magma", "Quake", "Buddha", "String", "Phoenix", "Portal", "Rumble",
-    "Paw", "Gravity", "Dough", "Shadow", "Venom", "Control", "Spirit",
-    "Dragon", "Leopard"
+    "Rocket", "Spin", "Chop", "Spring", "Bomb", "Smoke", "Spike",
+    "Flame", "Ice", "Sand", "Dark", "Diamond", "Light", "Rubber",
+    "Barrier", "Ghost", "Magma", "Quake", "Buddha", "Love", "Spider",
+    "Sound", "Phoenix", "Portal", "Rumble", "Pain", "Blizzard", 
+    "Gravity", "Mammoth", "T-Rex", "Dough", "Shadow", "Venom",
+    "Control", "Spirit", "Dragon", "Leopard", "Kitsune", "Yeti",
+    "Tiger", "Gas"
 ]
 
 last_stock = set()  # прошлый сток
