@@ -5,7 +5,7 @@ from telegram import Bot
 
 # === НАСТРОЙКИ ===
 URL = "https://fruityblox.com/stock"  # источник данных
-CHECK_INTERVAL = 5 * 60  # каждые 5 минут
+CHECK_INTERVAL = 5 * 5  # каждые 5 минут
 
 TELEGRAM_TOKEN = "8537002336:AAGGbHi_Amexh6dbKVVU_7Fr-HIZGJtZG2w"
 TELEGRAM_CHAT_ID = -1003378537484  # ID чата/группы
