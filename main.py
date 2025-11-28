@@ -5,11 +5,11 @@ from bs4 import BeautifulSoup
 from telegram import Bot
 
 # === НАСТРОЙКИ ===
-URL = "https://fruityblox.com/stock"  # можно заменить, если найдёшь другой источник
-CHECK_INTERVAL = 2 * 60 * 60  # проверять каждые 2 часа
+URL = "https://fruityblox.com/stock"  # источник данных
+CHECK_INTERVAL = 5 * 60  # каждые 5 минут
 
-TELEGRAM_TOKEN = "YOUR_TELEGRAM_TOKEN"
-TELEGRAM_CHAT_ID = 123456789  # <- твой chat_id
+TELEGRAM_TOKEN = "8537002336:AAGGbHi_Amexh6dbKVVU_7Fr-HIZGJtZG2w"
+TELEGRAM_CHAT_ID = -1003378537484  # ID чата/группы
 
 tg_bot = Bot(token=TELEGRAM_TOKEN)
 STATE_FILE = "blox_stock_state.json"
@@ -17,28 +17,19 @@ STATE_FILE = "blox_stock_state.json"
 def fetch_stock(url=URL):
     resp = requests.get(url, timeout=15)
     resp.raise_for_status()
-    html = resp.text
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(resp.text, "html.parser")
 
     result = {"normal": [], "mirage": []}
 
-    # Примерные селекторы — их может потребоваться подстроить под реальный HTML сайта
-    # Предположим, обычный сток в <div id="normal-stock">, мираж — в <div id="mirage-stock">
-    normal_div = soup.find(id="normal-stock")
+    # === Важно! Подставь свои селекторы под сайт ===
+    normal_div = soup.find(id="normal-stock")  # пример
     if normal_div:
-        for li in normal_div.find_all("li"):
-            name = li.get_text(strip=True)
-            if name:
-                result["normal"].append(name)
+        result["normal"] = [li.get_text(strip=True) for li in normal_div.find_all("li")]
 
-    mirage_div = soup.find(id="mirage-stock")
+    mirage_div = soup.find(id="mirage-stock")  # пример
     if mirage_div:
-        for li in mirage_div.find_all("li"):
-            name = li.get_text(strip=True)
-            if name:
-                result["mirage"].append(name)
+        result["mirage"] = [li.get_text(strip=True) for li in mirage_div.find_all("li")]
 
-    # Если HTML другая структура — нужно подправить парсинг
     return result
 
 def load_state():
@@ -54,39 +45,38 @@ def save_state(state):
 
 def diff_and_notify(old, new):
     messages = []
-    # Проверить обычный сток
-    new_norm = set(new.get("normal", []))
-    old_norm = set(old.get("normal", []))
-    added_norm = new_norm - old_norm
-    if added_norm:
-        messages.append("🍎 Новый обычный сток:\n" + "\n".join(sorted(added_norm)))
 
-    # Проверить мираж‑сток
-    new_mir = set(new.get("mirage", []))
-    old_mir = set(old.get("mirage", []))
-    added_mir = new_mir - old_mir
-    if added_mir:
-        messages.append("✨ Новый мираж‑сток:\n" + "\n".join(sorted(added_mir)))
+    # обычный сток
+    added_normal = set(new.get("normal", [])) - set(old.get("normal", []))
+    if added_normal:
+        messages.append("🍎 Новый обычный сток:\n" + "\n".join(sorted(added_normal)))
 
-    # Если есть, отправить
+    # мираж
+    added_mirage = set(new.get("mirage", [])) - set(old.get("mirage", []))
+    if added_mirage:
+        messages.append("✨ Новый мираж‑сток:\n" + "\n".join(sorted(added_mirage)))
+
     for msg in messages:
         tg_bot.send_message(TELEGRAM_CHAT_ID, msg)
 
     return bool(messages)
 
 def monitor_loop():
-    prev = load_state()
+    prev_state = load_state()
     while True:
         try:
-            current = fetch_stock()
+            current_state = fetch_stock()
         except Exception as e:
             print("Ошибка при получении стока:", e)
             time.sleep(60)
             continue
 
-        changed = diff_and_notify(prev, current)
+        changed = diff_and_notify(prev_state, current_state)
         if changed:
-            save_state(current)
+            save_state(current_state)
+        else:
+            # отправляем даже если изменений нет
+            tg_bot.send_message(TELEGRAM_CHAT_ID, "🕒 Проверка стока: изменений нет")
 
         time.sleep(CHECK_INTERVAL)
 
