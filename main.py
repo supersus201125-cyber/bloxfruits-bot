@@ -8,7 +8,7 @@ URL = "https://fruityblox.com/stock"
 CHECK_INTERVAL = 30  # проверять каждые 30 сек
 
 TELEGRAM_TOKEN = "8537002336:AAGGbHi_Amexh6dbKVVU_7Fr-HIZGJtZG2w"  # <-- Вставь свой токен
-TELEGRAM_CHAT_ID = 123456789              # <-- ID твоего чата
+TELEGRAM_CHAT_ID = -5026548489              # <-- ID твоего чата
 
 tg_bot = Bot(token=TELEGRAM_TOKEN)
 
