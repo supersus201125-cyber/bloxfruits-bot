@@ -14,11 +14,11 @@ tg_bot = Bot(token=TELEGRAM_TOKEN)
 
 # Список всех фруктов игры
 ALL_FRUITS = [
-    "Bomb", "Spike", "Chop", "Spring", "Kilo", "Smoke", "Spin", "Flame",
-    "Ice", "Sand", "Dark", "Diamond", "Light", "Love", "Rubber", "Barrier",
+    "Bomb", "Spike", "Chop", "Spring", "Rocked", "Smoke", "Spin", "Flame",
+    "Ice", "Sand", "Dark", "Diamond", "Light", "Love", "Rubber", "Creation",
     "Magma", "Quake", "Buddha", "String", "Phoenix", "Portal", "Rumble",
-    "Paw", "Gravity", "Dough", "Shadow", "Venom", "Control", "Spirit",
-    "Dragon", "Leopard", "Rocket", "Ghost", "Spider", "Sound", "Pain",
+    "Pain", "Gravity", "Dough", "Shadow", "Venom", "Control", "Spirit",
+    "Dragon", "Leopard", "Ghost", "Spider", "Sound",
     "Blizzard", "Mammoth", "T-Rex", "Kitsune", "Yeti", "Tiger", "Gas"
 ]
 
