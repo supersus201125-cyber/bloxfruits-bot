@@ -1,9 +1,9 @@
-import requests
+Зimport requests
 import time
 from telegram import Bot
 
 API_URL = "https://blox-fruits-api.onrender.com/api/bloxfruits/stock"
-CHECK_INTERVAL = 130  # проверяем каждые 60 секунд
+CHECK_INTERVAL = 300 # проверяем каждые 60 секунд
 
 TELEGRAM_TOKEN = "8537002336:AAGGbHi_Amexh6dbKVVU_7Fr-HIZGJtZG2w"
 TELEGRAM_CHAT_ID = -1003378537484
