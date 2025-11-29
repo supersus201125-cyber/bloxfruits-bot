@@ -7,7 +7,10 @@ from datetime import datetime
 API_TOKEN = '8537002336:AAGGbHi_Amexh6dbKVVU_7Fr-HIZGJtZG2w'
 CHAT_ID = '-1003378537484'  # ID вашего канала, группы или пользователя
 
-bot = Bot(token=API_TOKEN, parse_mode="Markdown")
+bot = Bot(
+    token=API_TOKEN,
+    default=DefaultBotProperties(parse_mode="Markdown")
+)
 LAST_STOCK = None  # Глобальная переменная для хранения предыд. стока
 
 def fetch_stock():
