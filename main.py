@@ -1,20 +1,18 @@
 import requests
 import time
-from bs4 import BeautifulSoup
 from telegram import Bot
 
 # === НАСТРОЙКИ ===
-URL = "https://fruityblox.com/stock"  # источник данных
-CHECK_INTERVAL = 2 * 60 * 60 # каждые 5 минут
+API_URL = "https://fruityblox.com/api/stock"  # новый рабочий API
+CHECK_INTERVAL = 5 * 60  # каждые 5 минут
 
 TELEGRAM_TOKEN = "8537002336:AAGGbHi_Amexh6dbKVVU_7Fr-HIZGJtZG2w"
-TELEGRAM_CHAT_ID = -1003378537484  # ID чата/группы
+TELEGRAM_CHAT_ID = -1003378537484
 
 tg_bot = Bot(token=TELEGRAM_TOKEN)
 
-# Список всех фруктов игры
 ALL_FRUITS = [
-    "Bomb", "Spike", "Chop", "Spring", "Rocked", "Smoke", "Spin", "Flame",
+    "Bomb", "Spike", "Chop", "Spring", "Rocket", "Smoke", "Spin", "Flame",
     "Ice", "Sand", "Dark", "Diamond", "Light", "Love", "Rubber", "Creation",
     "Magma", "Quake", "Buddha", "String", "Phoenix", "Portal", "Rumble",
     "Pain", "Gravity", "Dough", "Shadow", "Venom", "Control", "Spirit",
@@ -22,61 +20,47 @@ ALL_FRUITS = [
     "Blizzard", "Mammoth", "T-Rex", "Kitsune", "Yeti", "Tiger", "Gas"
 ]
 
-def fetch_stock(url=URL):
-    """Парсим сайт и возвращаем нормальный и миражный сток"""
-    resp = requests.get(url, timeout=15)
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
+def fetch_stock():
+    """Получает сток через официальный JSON API сайта"""
+    try:
+        response = requests.get(API_URL, timeout=15)
+        data = response.json()
 
-    # Получаем все элементы стока с сайта
-    # Сайт может показывать фрукты в списках <li>, настраиваем селекторы
-    stock_items = soup.find_all("li")
-    normal_stock = []
-    mirage_stock = []
+        # API возвращает {"stock": ["Flame", "Portal", ...]}
+        fruits = data.get("stock", [])
 
-    for li in stock_items:
-        text = li.get_text(strip=True)
-        # Определяем тип стока по тексту (обычно сайт пишет Normal / Mirage рядом)
-        if "Normal" in text:
-            fruit_name = text.replace("Normal:", "").strip()
-            if fruit_name in ALL_FRUITS:
-                normal_stock.append(fruit_name)
-        elif "Mirage" in text:
-            fruit_name = text.replace("Mirage:", "").strip()
-            if fruit_name in ALL_FRUITS:
-                mirage_stock.append(fruit_name)
+        # фильтруем только реальные фрукты
+        fruits = [f for f in fruits if f in ALL_FRUITS]
 
-    return {"normal": normal_stock, "mirage": mirage_stock}
+        return fruits
+
+    except Exception as e:
+        print("Ошибка API:", e)
+        return []
+
 
 def format_stock_message(stock):
-    msg_lines = []
-    normal = stock.get("normal", [])
-    mirage = stock.get("mirage", [])
+    if not stock:
+        return "❌ Сток пуст или сайт временно недоступен."
 
-    if normal:
-        msg_lines.append("🍎 Нормальный сток:")
-        msg_lines.extend(f"- {fruit}" for fruit in normal)
-    else:
-        msg_lines.append("🍎 Нормальный сток: пусто")
+    message = "🍇 *Текущий сток FruityBlox:*\n\n"
+    message += "\n".join(f"• {fruit}" for fruit in stock)
 
-    if mirage:
-        msg_lines.append("\n✨ Миражный сток:")
-        msg_lines.extend(f"- {fruit}" for fruit in mirage)
-    else:
-        msg_lines.append("\n✨ Миражный сток: пусто")
+    return message
 
-    return "\n".join(msg_lines)
 
 def monitor_loop():
     while True:
         try:
             stock = fetch_stock()
-            message = format_stock_message(stock)
-            tg_bot.send_message(TELEGRAM_CHAT_ID, message)
+            msg = format_stock_message(stock)
+            tg_bot.send_message(TELEGRAM_CHAT_ID, msg, parse_mode="Markdown")
+            print("Сток отправлен.")
         except Exception as e:
-            print("Ошибка при получении или отправке стока:", e)
+            print("Ошибка при отправке в Telegram:", e)
 
         time.sleep(CHECK_INTERVAL)
+
 
 if __name__ == "__main__":
     monitor_loop()
