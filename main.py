@@ -1,6 +1,7 @@
 import requests
 import asyncio
 from aiogram import Bot
+from aiogram.client.default import DefaultBotProperties
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime
 
