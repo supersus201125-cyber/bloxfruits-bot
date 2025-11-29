@@ -1,65 +1,62 @@
 import requests
-import time
-from telegram import Bot
+import asyncio
+from aiogram import Bot
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from datetime import datetime
 
-# === НАСТРОЙКИ ===
-API_URL = "https://blox-fruits-api.vercel.app/api/stock"
-CHECK_INTERVAL = 5 * 60  # проверка каждые 5 минут
+API_TOKEN = '8537002336:AAGGbHi_Amexh6dbKVVU_7Fr-HIZGJtZG2w'
+CHAT_ID = '-1003378537484'  # ID вашего канала, группы или пользователя
 
-TELEGRAM_TOKEN = "8537002336:AAGGbHi_Amexh6dbKVVU_7Fr-HIZGJtZG2w"
-TELEGRAM_CHAT_ID = -1003378537484
+bot = Bot(token=API_TOKEN, parse_mode="Markdown")
 
-tg_bot = Bot(token=TELEGRAM_TOKEN)
-
-def fetch_stock():
-    """Получает Normal и Mirage сток с рабочего API"""
+def get_stock():
     try:
-        response = requests.get(API_URL, timeout=15)
-        data = response.json()
-
-        normal = data.get("normal", [])
-        mirage = data.get("mirage", [])
-
-        return {"normal": normal, "mirage": mirage}
-
+        r = requests.get("https://bloxfruitstock.com/api/stock", timeout=10)
+        r.raise_for_status()
+        data = r.json()
+        fruits = data.get("stock", [])
+        expires = data.get("expiresAt", "")
+        text = (
+            f"🍏 *Обычный сток фруктов Blox Fruits:*\n" +
+            "\n".join([f"• {fruit}" for fruit in fruits])
+        )
+        if expires:
+            text += f"\n\nСледующее обновление: {expires.replace('T', ' ').replace('Z', '')}"
+        return text
     except Exception as e:
-        print("Ошибка API:", e)
-        return {"normal": [], "mirage": []}
+        return f"❌ Не удалось получить обычный сток: {e}"
 
+def get_mirage():
+    try:
+        r = requests.get("https://bloxfruitstock.com/api/mirage", timeout=10)
+        r.raise_for_status()
+        data = r.json()
+        mirage = data.get("fruit")  # зависит от структуры, уточните!
+        found = data.get("found", False)
+        if found and mirage:
+            return f"🌟 *Новый Миражный фрукт в стоке*: {mirage}"
+        else:
+            return None  # не слать ничего если миража нет
+    except Exception as e:
+        return f"❌ Не удалось получить миражный фрукт: {e}"
 
-def format_stock_message(stock):
-    normal = stock.get("normal", [])
-    mirage = stock.get("mirage", [])
+async def send_stock():
+    stock_text = get_stock()
+    await bot.send_message(CHAT_ID, stock_text)
 
-    msg_lines = []
+async def send_mirage():
+    mirage_text = get_mirage()
+    if mirage_text:
+        await bot.send_message(CHAT_ID, mirage_text)
 
-    if normal:
-        msg_lines.append("🍎 *Normal сток:*")
-        msg_lines.extend(f"• {f}" for f in normal)
-    else:
-        msg_lines.append("🍎 Normal сток пуст")
-
-    if mirage:
-        msg_lines.append("\n✨ *Mirage сток:*")
-        msg_lines.extend(f"• {f}" for f in mirage)
-    else:
-        msg_lines.append("\n✨ Mirage сток пуст")
-
-    return "\n".join(msg_lines)
-
-
-def monitor_loop():
+async def main():
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(send_stock, "interval", hours=4)     # Обычный сток каждые 4 часа
+    scheduler.add_job(send_mirage, "interval", hours=2)    # Мираж каждый 2 часа
+    scheduler.start()
+    print("Бот запущен и авто-отправляет сообщения...")
     while True:
-        try:
-            stock = fetch_stock()
-            msg = format_stock_message(stock)
-            tg_bot.send_message(TELEGRAM_CHAT_ID, msg, parse_mode="Markdown")
-            print("Сток отправлен:", stock)
-        except Exception as e:
-            print("Ошибка при отправке в Telegram:", e)
-
-        time.sleep(CHECK_INTERVAL)
-
+        await asyncio.sleep(3600)
 
 if __name__ == "__main__":
-    monitor_loop()
+    asyncio.run(main())
