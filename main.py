@@ -8,7 +8,7 @@ API_TOKEN = '8537002336:AAGGbHi_Amexh6dbKVVU_7Fr-HIZGJtZG2w'
 CHAT_ID = '-1003378537484'  # ID вашего канала, группы или пользователя
 
 bot = Bot(token=API_TOKEN, parse_mode="Markdown")
-LAST_STOCK = None  # Для отслеживания предыдущего стока
+LAST_STOCK = None  # Глобальная переменная для хранения предыд. стока
 
 def fetch_stock():
     try:
@@ -16,7 +16,7 @@ def fetch_stock():
         fruits = data.get("stock", [])
         expires = data.get("expiresAt", "")
         text = (
-            f"🍏 *Сток фруктов Blox Fruits:*\n" 
+            f"🍏 *Сток фруктов Blox Fruits:*\n"
             + "\n".join([f"• {fruit}" for fruit in fruits])
         )
         if expires:
@@ -28,7 +28,7 @@ def fetch_stock():
 async def send_stock(startup=False):
     global LAST_STOCK
     fruits, text = fetch_stock()
-    # При старте всегда шлёт, дальше - только если изменился
+    # При запуске всегда отправляет сообщение
     if startup or fruits != LAST_STOCK:
         LAST_STOCK = fruits
         await bot.send_message(CHAT_ID, text)
@@ -41,7 +41,7 @@ async def periodic_checker():
         await asyncio.sleep(3600)
 
 async def main():
-    await send_stock(startup=True)  # При запуске кинет сток
+    await send_stock(startup=True)  # При запуске отправляет всегда!
     await periodic_checker()
 
 if __name__ == "__main__":
