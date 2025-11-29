@@ -1,9 +1,10 @@
-Зimport requests
+import requests
 import time
 from telegram import Bot
 
-API_URL = "https://blox-fruits-api.onrender.com/api/bloxfruits/stock"
-CHECK_INTERVAL = 300 # проверяем каждые 60 секунд
+# === НАСТРОЙКИ ===
+API_URL = "https://blox-fruits-api.vercel.app/api/stock"
+CHECK_INTERVAL = 5 * 60  # проверка каждые 5 минут
 
 TELEGRAM_TOKEN = "8537002336:AAGGbHi_Amexh6dbKVVU_7Fr-HIZGJtZG2w"
 TELEGRAM_CHAT_ID = -1003378537484
@@ -11,31 +12,41 @@ TELEGRAM_CHAT_ID = -1003378537484
 tg_bot = Bot(token=TELEGRAM_TOKEN)
 
 def fetch_stock():
-    """Получает сток и логирует полный ответ API"""
+    """Получает Normal и Mirage сток с рабочего API"""
     try:
         response = requests.get(API_URL, timeout=15)
-
-        # Логируем статус и полный текст ответа
-        print("Status Code:", response.status_code)
-        print("Response Text:", response.text)
-
-        # Пытаемся получить JSON
         data = response.json()
-        stock = data.get("stock", [])
 
-        return stock
+        normal = data.get("normal", [])
+        mirage = data.get("mirage", [])
+
+        return {"normal": normal, "mirage": mirage}
+
     except Exception as e:
-        print("Ошибка при запросе API:", e)
-        return []
+        print("Ошибка API:", e)
+        return {"normal": [], "mirage": []}
+
 
 def format_stock_message(stock):
-    if not stock:
-        return "❌ Сток пуст или API недоступен."
+    normal = stock.get("normal", [])
+    mirage = stock.get("mirage", [])
 
-    msg = "🍇 *Текущий сток Blox Fruits:*\n\n"
-    msg += "\n".join(f"• {fruit}" for fruit in stock)
+    msg_lines = []
 
-    return msg
+    if normal:
+        msg_lines.append("🍎 *Normal сток:*")
+        msg_lines.extend(f"• {f}" for f in normal)
+    else:
+        msg_lines.append("🍎 Normal сток пуст")
+
+    if mirage:
+        msg_lines.append("\n✨ *Mirage сток:*")
+        msg_lines.extend(f"• {f}" for f in mirage)
+    else:
+        msg_lines.append("\n✨ Mirage сток пуст")
+
+    return "\n".join(msg_lines)
+
 
 def monitor_loop():
     while True:
@@ -45,9 +56,10 @@ def monitor_loop():
             tg_bot.send_message(TELEGRAM_CHAT_ID, msg, parse_mode="Markdown")
             print("Сток отправлен:", stock)
         except Exception as e:
-            print("Ошибка отправки в Telegram:", e)
+            print("Ошибка при отправке в Telegram:", e)
 
         time.sleep(CHECK_INTERVAL)
+
 
 if __name__ == "__main__":
     monitor_loop()
